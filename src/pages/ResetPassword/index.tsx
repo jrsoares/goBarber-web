@@ -50,12 +50,14 @@ const SignIn: React.FC = () => {
 
         const { password, password_confirmation } = data;
         const token = location.search.replace('?token=', '');
+
         if (!token) {
           throw new Error();
         }
         await api.post('/password/reset', {
           password,
           password_confirmation,
+          token,
         });
         history.push('/');
       } catch (err) {
