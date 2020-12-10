@@ -18,10 +18,20 @@ import {
 
 import logoImg from '../../assets/logo.svg';
 import { useAuth } from '../../hooks/auth';
+import api from '../../services/api';
+
+type MonthAvailabilityItem = {
+  day: number;
+  available: boolean;
+};
 
 const Dashboard: React.FC = () => {
   const { signOut, user } = useAuth();
   const [selectDate, setSelectDate] = React.useState(new Date());
+  const [currentMonth, setCurrentMonth] = React.useState(new Date());
+  const [monthAvailability, setMonthAvailability] = React.useState<
+    MonthAvailabilityItem[]
+  >([]);
 
   const handleDateChange = React.useCallback(
     (day: Date, modifiers: DayModifiers) => {
@@ -31,6 +41,33 @@ const Dashboard: React.FC = () => {
     },
     [],
   );
+
+  const handleMonthChange = React.useCallback((month: Date) => {
+    setCurrentMonth(month);
+  }, []);
+
+  React.useEffect(() => {
+    api
+      .get(`/providers/${user.id}/month-availability`, {
+        params: {
+          year: currentMonth.getFullYear(),
+          month: currentMonth.getMonth() + 1,
+        },
+      })
+      .then((response) => setMonthAvailability(response.data));
+  }, [currentMonth, user.id]);
+
+  const disableDays = React.useMemo(() => {
+    const dates = monthAvailability
+      .filter((monthDay) => monthDay.available === false)
+      .map((monthDay) => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        return new Date(year, month, monthDay.day);
+      });
+    return dates;
+  }, [currentMonth, monthAvailability]);
 
   return (
     <Container>
@@ -135,8 +172,9 @@ const Dashboard: React.FC = () => {
         <Calendar>
           <DayPicker
             weekdaysShort={['D', 'S', 'T', 'Q', 'Q', 'S', 'S']}
+            onMonthChange={handleMonthChange}
             fromMonth={new Date()}
-            disabledDays={[{ daysOfWeek: [0, 6] }]}
+            disabledDays={[{ daysOfWeek: [0, 6] }, ...disableDays]}
             modifiers={{ available: { daysOfWeek: [1, 2, 3, 4, 5] } }}
             selectedDays={selectDate}
             onDayClick={handleDateChange}
