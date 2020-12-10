@@ -2,6 +2,8 @@ import React from 'react';
 import DayPicker, { DayModifiers } from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
 import { FiClock, FiPower } from 'react-icons/fi';
+import { isToday, format } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR';
 
 import {
   Container,
@@ -69,6 +71,17 @@ const Dashboard: React.FC = () => {
     return dates;
   }, [currentMonth, monthAvailability]);
 
+  const selectedDateAsText = React.useMemo(() => {
+    return format(selectDate, "'Dia' dd 'de' MMMM", {
+      locale: ptBR,
+    });
+  }, [selectDate]);
+
+  const selectedWeekDay = React.useMemo(() => {
+    return format(selectDate, 'cccc', {
+      locale: ptBR,
+    });
+  }, [selectDate]);
   return (
     <Container>
       <Header>
@@ -93,9 +106,9 @@ const Dashboard: React.FC = () => {
         <Schedule>
           <h1>Horários agendandos</h1>
           <p>
-            <span>Hoje</span>
-            <span>Dia 06</span>
-            <span>Segunda-feira</span>
+            {isToday(selectDate) && <span>Hoje</span>}
+            <span>{selectedDateAsText}</span>
+            <span>{selectedWeekDay}</span>
           </p>
           <NextAppointment>
             <strong>Atendimento a seguir</strong>
